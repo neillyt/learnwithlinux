@@ -1,0 +1,60 @@
+
+CLONING A VM - DUMPXML, SYSPREP, CLONE
+
+To clone a KVM VM you need
+
+    a definition file (RAM size, number of CPUs, etc...)
+    and a template disk image (with installed OS)
+
+Creating Definition File And Template Image
+
+The definition file is just a libvirt xml file. The template image is just a VM disk image. This is how to create them:
+
+    create a base VM and install OS
+    shut down the base VM
+
+virsh shutdown basevm
+
+    dump its XML file to template.xml and copy its image to template.qcow2
+
+virsh dumpxml basevm > /var/lib/libvirt/images/template.xml
+cp /var/lib/libvirt/images/basevm.qcow2 /var/lib/libvirt/images/template.qcow2
+
+    in template.xml point the disk source file to template.qcow2
+
+<disk type='file' device='disk'>
+  <driver name='qemu' type='qcow2' cache='none'/>
+  <source file='/var/lib/libvirt/images/template.qcow2'/>
+  <target dev='vda' bus='virtio'/>
+  <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
+</disk>
+
+    run virt-sysprep on template.qcow2.
+
+This will reset the image, e.g. will remove the host SSH keys, will create new MAC address for network interfaces, adjust udev persistent net rules, clean up log files, etc...
+
+virt-sysprep -a /var/lib/libvirt/images/template.qcow2
+
+    after this poin you don't need the base VM anymore. Delete it.
+
+virsh undefine basevm
+rm /var/lib/libvirt/images/basevm.qcow2
+
+Cloning new VMs from Template
+
+    clone new VMs from template.xml and template.qcow2
+
+virt-clone --connect qemu:///system                    \
+  --original-xml /var/lib/libvirt/images/template.xml  \
+  --name newvm                                         \
+  --file /var/lib/libvirt/images/newvm.qcow2
+
+Done
+social
+
+    atom feed
+
+Proudly powered by Pelican, which takes great advantage of Python.
+
+The theme is by Smashing Magazine, thanks!
+
