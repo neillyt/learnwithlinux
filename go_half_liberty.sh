@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# Automate!
 echo "What is the hostname? Do not include '.learnwithlinux.com'";
 echo "Good Example: awesomebox";
 echo "Bad Example: awesomebox.learnwithlinux.com";
